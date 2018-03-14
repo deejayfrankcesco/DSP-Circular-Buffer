@@ -8,6 +8,10 @@
 ⎩=============================================================================⎭
 △△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△*/
 
+#pragma once
+
+#define DEFAULT_SIZE  10;
+
 class buffer
 {
 private:
@@ -22,6 +26,7 @@ private:
     long index_cycle(int long index);
 
 public:
+    buffer();
     buffer(long n);                             //Construct buffer with n float spaces
     long Buff_Size();                           //Return buffer size
     bool IsEmpty();
