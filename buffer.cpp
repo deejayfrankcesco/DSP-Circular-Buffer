@@ -2,13 +2,12 @@
 ⎧=============================================================================⎫
 ⎪ Circular FIFO Float buffer oriented to DSP applications                     ⎪
 ⎪ Francesco Martina                                                           ⎪
-⎪ Devoted to Giulia                                                           ⎪
 ⎪—————————————————————————————————————————————————————————————————————————————⎪
 ⎪ © All Right Reserved                                                        ⎪
 ⎩=============================================================================⎭
 △△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△*/
 
-#include "buffer.hpp"
+#include "buff.h"
 
 //Constructors
 buffer::buffer(){
