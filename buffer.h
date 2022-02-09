@@ -10,29 +10,34 @@
 
 #define DEFAULT_SIZE  10;
 
-class buffer
+class Buffer
 {
 private:
 
     double* storage;
-    unsigned int size;
-    unsigned int new_index, oldest_data_index;
-    unsigned int n_samples;
+
+    //note.
+    //int types are here used since specific methods (see index_cycle) cannot exploit the unsigned int
+    //range without going for the long type. (int range is enough for most of the applications)
+
+    int size;
+    int n_samples;
+    int new_index, oldest_data_index;
     
     //internal utility
     unsigned int index_cycle(int index);
 
 public:
 
-    buffer();
-    buffer(unsigned int n);                      //Construct buffer with n double type samples
-    ~buffer();
+    Buffer();
+    Buffer(int n);                               //Construct buffer with n double type samples
+    ~Buffer();
 
     ////Utility
-    unsigned int Buff_Size();                    //Return buffer size
+    int Size();                                  //Return buffer size
     bool IsEmpty();
     bool IsFull();
-    unsigned int N();                            //Return number of stored samples
+    int N();                                     //Return number of stored samples
 
     ////Main Methods
     void reset();                                //Empty the buffer (resets the buffer pointers)
