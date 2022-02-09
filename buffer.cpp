@@ -1,99 +1,115 @@
-/*▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽
+/*
 ⎧=============================================================================⎫
-⎪ Circular FIFO Float buffer oriented to DSP applications                     ⎪
-⎪ Francesco Martina                                                           ⎪
-⎪—————————————————————————————————————————————————————————————————————————————⎪
-⎪ © All Right Reserved                                                        ⎪
+⎪ Circular FIFO Buffer oriented to DSP applications                           ⎪
+⎪ Francesco Martina 2022                                                      ⎪
 ⎩=============================================================================⎭
-△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△*/
+*/
 
 #include "buffer.h"
 
-//Constructors
 buffer::buffer(){
-    size = DEFAULT_SIZE;                    //load default size
-    storage = new float[size];              //instantiate data memory spoace
-    new_index = 0;                          //free cell is the first cell
-    oldest_data_index = 0;
-    n_samples = 0;                          //no data
+    size = DEFAULT_SIZE;                        //load default size
+    storage = new double[size];                 //instantiate data memory spoace
+    reset();                                    //reset the buffer pointers
+}   
+    
+buffer::buffer(unsigned int n){ 
+    size = n;                                   //load size
+    storage = new double[size];                 //instantiate data memory spoace
+    reset();                                    //reset the buffer pointers
+}   
+    
+buffer::~buffer(){  
+    delete[] storage;                           //free memory space
 }
 
-buffer::buffer(long n){
-    size = n;                               //load size
-    storage = new float[size];              //instantiate data memory spoace
-    new_index = 0;                          //free cell is the first cell
-    oldest_data_index = 0;
-    n_samples = 0;                          //no data    
-}
+////Utility
 
-/////////////////// Function
-long buffer::Buff_Size(){
+unsigned int buffer::Buff_Size(){
     return size;
 }
 
 bool buffer::IsEmpty(){
-    if(!n_samples) return 1; else return 0;
+    return !n_samples;
 }
 
 bool buffer::IsFull(){
-    if(n_samples == size) return 1; else return 0;
+    return n_samples == size;
 }
 
-bool buffer::push(const float& val){
-    if(!IsFull()){                          //check if there is free space
-        storage[new_index] = val;           //write data
-        new_index = (new_index+1)%size;     //incement free sample space index
-        n_samples++;
-        return 0;
-    }else return 1;                         //buffer is full
-}
-
-void buffer::fpush(const float& val){
-        //force push
-        storage[new_index] = val;           //overwrite data
-        new_index = (new_index+1)%size;     //incement "free" (overwrite) space index
-        if(!IsFull())
-            n_samples++;                    //if it was full it will remain full
-        else
-            oldest_data_index = (oldest_data_index+1)%size; //update the old data index to preserve order
-}
-
-bool buffer::pop(float& data){
-    if(!IsEmpty()){
-        data = storage[oldest_data_index];  //request data
-        oldest_data_index = (oldest_data_index+1)%size;
-        n_samples--;
-        return 1;                           //return true on success
-    }else{
-        //data = 0;
-        return 0;
-    } 
-}
-
-long buffer::N(){
+unsigned int buffer::N(){
     return n_samples;
 }
 
-long buffer::index_cycle(int long index){                   //return cyclic index in buffer (ex. if size = 3, f(1)=1, f(-1)=2, f(3)=0)
+unsigned int buffer::index_cycle(int index){    //return cyclic index in buffer (ex. if size = 3, f(1)=1, f(-1)=2, f(3)=0)
     if (index >= 0)
         return index % size;
     else
-        return size - ((-index) % size);
+        return size + ((index + 1) % size) -1;
 }
 
-bool buffer::getPastSample(float& data, long i){
-    return getSample(data, i, 0);
+////Main Methods
+
+void buffer::reset(){
+    new_index = 0;                              //free cell is the first cell
+    oldest_data_index = 0;  
+    n_samples = 0;                              //no data
+}   
+    
+void buffer::fill_zero(){   
+    reset();                                    //discard the previous buffer history
+    while(!push(0));                            //push zero samples
 }
 
-bool buffer::getSample(float& data, long i, unsigned long offset){
-    if(i<(-n_samples+1+offset) && i>offset)
-        return 1;                                           //the sample does not exist
-    data = storage[index_cycle((new_index-1+i-offset))];    //return the relative indexed sample
+bool buffer::push(const double& val){
+
+    //push data if the buffer is not full
+    if(!IsFull()){                              //check if there is free space
+        storage[new_index] = val;               //write data
+        new_index = index_cycle(new_index+1);   //incement free sample space index
+        n_samples++;
+        return 0;
+    }
+    return 1;                                   //buffer is full
+}
+
+void buffer::fpush(const double& val){
+
+        //force the data push
+        storage[new_index] = val;               //write/overwrite data
+        new_index = index_cycle(new_index+1);   //incement free sample space index
+
+        //manage the buffer status
+        if(!IsFull())
+            n_samples++;
+        else
+            oldest_data_index = index_cycle(oldest_data_index+1); //update the tail index
+}
+
+bool buffer::pop(double& data){
+
+    //pop data if not empty
+    if(!IsEmpty()){
+        data = storage[oldest_data_index];      //request data
+        oldest_data_index = index_cycle(oldest_data_index+1); //update the tail index
+        n_samples--;                            //update buffer status
+        return 0;                               //return 0 on success
+    }else{
+        data = 0;                               //return a dummy null value in case of fail
+        return 1;
+    }
+}
+
+////Macro
+
+bool buffer::getPastSample(double& data, int i){
+    
+    //index check
+    if((i >= 0) || (i < -n_samples)){
+        data = 0;                               //return a dummy null value in case of fail
+        return 1;
+    }
+
+    data = storage[index_cycle(new_index + i)]; //get the latest ith sample (with i < 0)
     return 0;
-}
-///////////////////
-
-//Destructor
-buffer::~buffer(){
-    delete[] storage;                       //free memory space
 }
