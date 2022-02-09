@@ -1,52 +1,52 @@
-/*▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽▽
+/*
 ⎧=============================================================================⎫
-⎪ Circular FIFO Float buffer oriented to DSP applications                     ⎪
-⎪ Francesco Martina                                                           ⎪
-⎪—————————————————————————————————————————————————————————————————————————————⎪
-⎪ © All Right Reserved                                                        ⎪
+⎪ Circular FIFO Buffer oriented to DSP applications                           ⎪
+⎪ Francesco Martina 2022                                                      ⎪
 ⎩=============================================================================⎭
-△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△△*/
+*/
 
-#pragma once
+#ifndef BUFFER_H
+#define BUFFER_H
 
 #define DEFAULT_SIZE  10;
 
 class buffer
 {
 private:
+
+    double* storage;
+    unsigned int size;
+    unsigned int new_index, oldest_data_index;
+    unsigned int n_samples;
     
-    //internal var
-    float* storage;
-    long size;
-    long new_index,oldest_data_index;
-    long n_samples;
-    
-    //utility functions
-    long index_cycle(int long index);
+    //internal utility
+    unsigned int index_cycle(int index);
 
 public:
+
     buffer();
-    buffer(long n);                             //Construct buffer with n float spaces
-    long Buff_Size();                           //Return buffer size
+    buffer(unsigned int n);                      //Construct buffer with n double type samples
+    ~buffer();
+
+    ////Utility
+    unsigned int Buff_Size();                    //Return buffer size
     bool IsEmpty();
     bool IsFull();
-    bool push(const float& val);                //Return false if succesfully pushed
-    void fpush(const float& val);               //Force write data, overwriting oldest
-    bool pop(float& data);                      //Request data, return false if there are no more data
-    long N();                                   //Return number of elements
+    unsigned int N();                            //Return number of stored samples
 
-    //DSP get sample utlities (relative index extraction)
-    //(0) refer to the last inserted sample, (-1) the penultimate etc.
-    //In getSample you can specify an offset (for example your FIR filter
-    //"latency", to refer as (0) a past sample. This permits to use both negative
-    //indexes (for past samples) and positive (for future sample) referring to the FIR
-    //zero time moment.
-    
-    //return 0 if the sample has been found, 1 if it does not exist
+    ////Main Methods
+    void reset();                                //Empty the buffer (resets the buffer pointers)
+    void fill_zero();                            //Fill the buffer with null (zero) samples
+    bool push(const double& val);                //Return false if succesfully pushed
+    void fpush(const double& val);               //Force write data, overwriting oldest
+    bool pop(double& data);                      //Request data, return false if there are no more data
 
-    bool getSample(float& data, long i, unsigned long offset);
-    bool getPastSample(float& data, long i);    //only negative(past) samples are allowed in this method, same as getSample with offset zero
+    ////Macro
+    //return the x[k] * z^i samples (only negative i are allowed)
+    //The last pushed sample is getPastSample(double& sample, -1).
     
-    ~buffer();
+    bool getPastSample(double& data, int i);
     
 };
+
+#endif
