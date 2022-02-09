@@ -62,7 +62,6 @@ void Buffer::fill_zero(){
 }
 
 bool Buffer::push(const double& val){
-
     //push data if the buffer is not full
     if(!IsFull()){                              //check if there is free space
         storage[new_index] = val;               //write data
@@ -74,7 +73,6 @@ bool Buffer::push(const double& val){
 }
 
 void Buffer::fpush(const double& val){
-
         //force the data push
         storage[new_index] = val;               //write/overwrite data
         new_index = index_cycle(new_index + 1); //incement free sample space index
@@ -87,7 +85,6 @@ void Buffer::fpush(const double& val){
 }
 
 bool Buffer::pop(double& data){
-
     //pop data if not empty
     if(!IsEmpty()){
         data = storage[oldest_data_index];      //request data
@@ -103,7 +100,6 @@ bool Buffer::pop(double& data){
 ////Macro
 
 bool Buffer::getPastSample(double& data, int i){
-    
     //index check
     if((i >= 0) || (i < -n_samples)){
         data = 0;                               //return a dummy null value in case of fail
